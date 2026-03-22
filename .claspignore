@@ -1,0 +1,7 @@
+script-utils/**
+node_modules/**
+types/**
+types-tmp/**
+package.json
+package-lock.json
+tsconfig.json

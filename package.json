@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.8",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build:types": "tsc && node script-utils/wrap-dts.js && rm -rf types-tmp"
+  },
+  "exclude": [
+    "script-utils",
+    "types"
+  ]
+}

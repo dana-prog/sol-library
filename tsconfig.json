@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "types-tmp",
+    "types": ["google-apps-script"],
+    "lib": ["ES2020"]
+  },
+  "include": ["**/*.js"],
+  "exclude": ["script-utils", "types", "types-tmp"]
+}
