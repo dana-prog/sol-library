@@ -4,7 +4,8 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "build:types": "tsc && node script-utils/wrap-dts.js && rm -rf types-tmp"
+    "build:types": "tsc && node script-utils/wrap-dts.js && rm -rf types-tmp",
+    "deploy": "clasp push && git add . && git commit -m \"$npm_config_msg\""
   },
   "exclude": [
     "script-utils",

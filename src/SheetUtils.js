@@ -61,14 +61,23 @@ function sortSheet(sheetName, colName, ascending = true) {
 /**
  * Returns all values from a column.
  *
- * @param {string} sheetName Sheet name.
+ * @param {string|GoogleAppsScript.Spreadsheet.Sheet|GoogleAppsScript.Spreadsheet.Range} sheetOrRange Either sheet or sheet name or a range.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {Array<*>} Column values.
  */
-function getColumnValues(sheetName, colHeader, includeHeader = true) {
-  const sheet = getSheet(sheetName);
-  const colRange = _getColumnRange(sheet, colHeader, includeHeader);
+function getColumnValues(sheetOrRange, colHeader, includeHeader = true) {
+  let colRange;
+
+  if (typeof sheetOrRange === 'string') {
+    const sheet = getSheet(sheetOrRange);
+    colRange = getColumnRange(sheet, colHeader, includeHeader);
+  } else if (sheetOrRange  instanceof GoogleAppsScript.Spreadsheet.Sheet) {
+    colRange = getColumnRange(sheetOrRange, colHeader, includeHeader);
+  } else {
+    colRange = sheetOrRange;
+  }
+
   return [].concat.apply([], colRange.getValues());
 }
 
@@ -133,7 +142,7 @@ function getHeaderMap(rangeOrSheet) {
  * Converts objects to sheet rows based on headers.
  *
  * @param {string} sheetName Sheet name.
- * @param {Array<Object>} objects Objects to convert (prop names must match headers).
+ * @param {Array<Object>} objects Objects to convert (prop names must match column headers).
  * @returns {Array<Array<*>>} Rows aligned with sheet headers.
  */
 function generateSheetRows(sheetName, objects) {
@@ -215,7 +224,7 @@ function updateRow(sheetName, row, rowNum) {
  * @param {*} value Value to match.
  * @returns {number[]} Matching row numbers (1-based).
  */
-function findRows(sheetName, colHeader, value) {
+function getRowNumbers(sheetName, colHeader, value) {
   const sheet = getSheet(sheetName);
   const colIndex = getColNumByHeader(sheet, colHeader);
 
@@ -237,15 +246,13 @@ function findRows(sheetName, colHeader, value) {
 /**
  * Returns the range of a column by header or index.
  *
- * @param {string} sheetName Sheet name.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|string} sheetNameOrObj Either sheet or sheet name.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {GoogleAppsScript.Spreadsheet.Range} Column range.
- *
- * @private
  */
-function _getColumnRange(sheetName, colHeader, includeHeader = true) {
-  const sheet = getSheet(sheetName);
+function getColumnRange(sheetNameOrObj, colHeader, includeHeader = true) {
+  const sheet = typeof  sheetNameOrObj === 'string' ? getSheet(sheetNameOrObj) : sheetNameOrObj;
   const colIndex = typeof colHeader === 'number' ? colHeader : getColNumByHeader(sheet, colHeader);
   return sheet.getRange(includeHeader ? 1 : 2, colIndex, sheet.getLastRow());
 }

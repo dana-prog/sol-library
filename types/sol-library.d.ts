@@ -124,12 +124,12 @@ declare const SOLLibrary: {
 /**
  * Returns all values from a column.
  *
- * @param {string} sheetName Sheet name.
+ * @param {string|GoogleAppsScript.Spreadsheet.Sheet|GoogleAppsScript.Spreadsheet.Range} sheetOrRange Either sheet or sheet name or a range.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {Array<*>} Column values.
  */
- getColumnValues(sheetName: string, colHeader: string | number, includeHeader?: boolean): Array<any>;
+ getColumnValues(sheetOrRange: string | GoogleAppsScript.Spreadsheet.Sheet | GoogleAppsScript.Spreadsheet.Range, colHeader: string | number, includeHeader?: boolean): Array<any>;
 
 /**
  * Returns an object mapping headers to values for a row.
@@ -163,7 +163,7 @@ declare const SOLLibrary: {
  * Converts objects to sheet rows based on headers.
  *
  * @param {string} sheetName Sheet name.
- * @param {Array<Object>} objects Objects to convert (prop names must match headers).
+ * @param {Array<Object>} objects Objects to convert (prop names must match column headers).
  * @returns {Array<Array<*>>} Rows aligned with sheet headers.
  */
  generateSheetRows(sheetName: string, objects: Array<any>): Array<Array<any>>;
@@ -202,8 +202,17 @@ declare const SOLLibrary: {
  * @param {*} value Value to match.
  * @returns {number[]} Matching row numbers (1-based).
  */
- findRows(sheetName: string, colHeader: string, value: any): number[];
+ getRowNumbers(sheetName: string, colHeader: string, value: any): number[];
 
+/**
+ * Returns the range of a column by header or index.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|string} sheetNameOrObj Either sheet or sheet name.
+ * @param {string|number} colHeader Column header name or index.
+ * @param {boolean} [includeHeader=true] Whether to include header row.
+ * @returns {GoogleAppsScript.Spreadsheet.Range} Column range.
+ */
+ getColumnRange(sheetNameOrObj: GoogleAppsScript.Spreadsheet.Sheet | string, colHeader: string | number, includeHeader?: boolean): GoogleAppsScript.Spreadsheet.Range;
 
 /**
  * Returns a pretty-printed JSON string.
