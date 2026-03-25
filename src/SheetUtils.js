@@ -61,23 +61,13 @@ function sortSheet(sheetName, colName, ascending = true) {
 /**
  * Returns all values from a column.
  *
- * @param {string|GoogleAppsScript.Spreadsheet.Sheet|GoogleAppsScript.Spreadsheet.Range} sheetOrRange Either sheet or sheet name or a range.
+ * @param {string} sheetName Sheet name.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {Array<*>} Column values.
  */
-function getColumnValues(sheetOrRange, colHeader, includeHeader = true) {
-  let colRange;
-
-  if (typeof sheetOrRange === 'string') {
-    const sheet = getSheet(sheetOrRange);
-    colRange = getColumnRange(sheet, colHeader, includeHeader);
-  } else if (sheetOrRange  instanceof GoogleAppsScript.Spreadsheet.Sheet) {
-    colRange = getColumnRange(sheetOrRange, colHeader, includeHeader);
-  } else {
-    colRange = sheetOrRange;
-  }
-
+function getColumnValues(sheetName, colHeader, includeHeader = true) {
+  const colRange = _getColumnRange(sheetName, colHeader, includeHeader);
   return [].concat.apply([], colRange.getValues());
 }
 
@@ -246,13 +236,15 @@ function getRowNumbers(sheetName, colHeader, value) {
 /**
  * Returns the range of a column by header or index.
  *
- * @param {GoogleAppsScript.Spreadsheet.Sheet|string} sheetNameOrObj Either sheet or sheet name.
+ * @param {string} sheetName Sheet name.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {GoogleAppsScript.Spreadsheet.Range} Column range.
+ *
+ * @private
  */
-function getColumnRange(sheetNameOrObj, colHeader, includeHeader = true) {
-  const sheet = typeof  sheetNameOrObj === 'string' ? getSheet(sheetNameOrObj) : sheetNameOrObj;
+function _getColumnRange(sheetName, colHeader, includeHeader = true) {
+  const sheet = getSheet(sheetName);
   const colIndex = typeof colHeader === 'number' ? colHeader : getColNumByHeader(sheet, colHeader);
   return sheet.getRange(includeHeader ? 1 : 2, colIndex, sheet.getLastRow());
 }
