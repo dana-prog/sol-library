@@ -67,7 +67,7 @@ function sortSheet(sheetName, colName, ascending = true) {
  * @returns {Array<*>} Column values.
  */
 function getColumnValues(sheetName, colHeader, includeHeader = true) {
-  const colRange = _getColumnRange(sheetName, colHeader, includeHeader);
+  const colRange = getColumnRange(sheetName, colHeader, includeHeader);
   return [].concat.apply([], colRange.getValues());
 }
 
@@ -113,7 +113,7 @@ function getSelectedRow(sheetName) {
  * @returns {Object<string, number>|-1} Header map or -1 if empty.
  */
 function getHeaderMap(rangeOrSheet) {
-  const range = rangeOrSheet.getDataRange ? rangeOrSheet.getDataRange() : rangeOrSheet;
+  const range = rangeOrSheet.getDataRange ? rangeOrSheet.getRange('1:1') : rangeOrSheet;
   const rangeValues = range.getValues();
 
   if (rangeValues.length === 0 || rangeValues[0].length === 0) {
@@ -240,11 +240,25 @@ function getRowNumbers(sheetName, colHeader, value) {
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {GoogleAppsScript.Spreadsheet.Range} Column range.
- *
- * @private
  */
-function _getColumnRange(sheetName, colHeader, includeHeader = true) {
+function getColumnRange(sheetName, colHeader, includeHeader = true) {
   const sheet = getSheet(sheetName);
   const colIndex = typeof colHeader === 'number' ? colHeader : getColNumByHeader(sheet, colHeader);
-  return sheet.getRange(includeHeader ? 1 : 2, colIndex, sheet.getLastRow());
+  const startRow = includeHeader ? 1 : 2;
+  const numRows = sheet.getLastRow() - startRow + 1;
+  return sheet.getRange(startRow, colIndex, numRows);
+}
+
+/**
+ * Checks whether one range is fully contained in another range.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Range} innerRange The range to test (candidate inside).
+ * @param {GoogleAppsScript.Spreadsheet.Range} outerRange The containing range.
+ * @returns {boolean} TRUE if `innerRange` is completely inside `outerRange`, otherwise FALSE.
+ */
+function isInside(innerRange, outerRange) {
+  return innerRange.getRow() >= outerRange.getRow() &&
+    innerRange.getLastRow() <= outerRange.getLastRow() &&
+    innerRange.getColumn() >= outerRange.getColumn() &&
+    innerRange.getLastColumn() <= outerRange.getLastColumn();
 }

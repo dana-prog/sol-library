@@ -1,9 +1,15 @@
-const LOG_ALERTS_PROPERTY_NAME = 'logAlerts';
+const WRITE_TO_LOG_FILE_PROPERTY_NAME = 'writeToLogFile';
+const LOG_SPREADSHEET_ID = '1dauoW72DKPJaMIhwTuCEa7tUqikiW5o4Rkcu1NHd_z0';
+const LOG_SHEET_ID = 0;
 
-const LOG_LEVEL = 'LOG';
-const INFO_LEVEL = 'INFO';
-const WARN_LEVEL = 'WARN';
-const ERROR_LEVEL = 'ERROR';
+const LOG_LEVELS = {
+  LOG: 'LOG',
+  INFO: 'INFO',
+  WARN: 'WARN',
+  ERROR: 'ERROR',
+};
+
+let _logSheet;
 
 /**
  * Logs a message with file and function context.
@@ -13,9 +19,29 @@ const ERROR_LEVEL = 'ERROR';
  * @param {*} message Message to log.
  * @param {string} [level] Log level.
  */
-function log(fileName, functionName, message, level = LOG_LEVEL) {
+function log(fileName, functionName, message, level = LOG_LEVELS.LOG) {
   const fullMessage = buildLogMessage(fileName, functionName, message);
-  _log(fullMessage, level);
+
+  switch (level) {
+    case LOG_LEVELS.ERROR:
+      console.error(fullMessage);
+      break;
+    case LOG_LEVELS.WARN:
+      console.warn(fullMessage);
+      break;
+    case LOG_LEVELS.INFO:
+      console.info(fullMessage);
+      break;
+    case LOG_LEVELS.LOG:
+      console.log(fullMessage);
+      break;
+    default:
+      console.warn('Unknown log level: ' + level + '. Message: ' + fullMessage);
+  }
+
+  if (getWriteToLogFileEnabled()) {
+    _writeToLogSheet(fileName, functionName, message, level)
+  }
 }
 
 /**
@@ -27,7 +53,7 @@ function log(fileName, functionName, message, level = LOG_LEVEL) {
  * @param {string|null} [message=null] Optional message prefix.
  * @param {string} [level] Log level.
  */
-function logArgs(fileName, functionName, args, message = null, level = LOG_LEVEL) {
+function logArgs(fileName, functionName, args, message = null, level = LOG_LEVELS.LOG) {
   log(fileName, functionName, (message != null ? message + '\n' : '') + jsonStringify(args), level);
 }
 
@@ -44,40 +70,14 @@ function buildLogMessage(fileName, functionName, message) {
 }
 
 /**
- * @private
- */
-function _log(message, level = LOG_LEVEL) {
-  switch (level) {
-    case ERROR_LEVEL:
-      console.error(message);
-      break;
-    case WARN_LEVEL:
-      console.warn(message);
-      break;
-    case INFO_LEVEL:
-      console.info(message);
-      break;
-    case LOG_LEVEL:
-      console.log(message);
-      break;
-    default:
-      console.warn('Unknown log level: ' + level + '. Message: ' + message);
-  }
-
-  if (getLogAlerts()) {
-    alert('Log', message);
-  }
-}
-
-/**
  * Toggles the user setting for showing alert logs.
  * When true, logs are displayed in an alert dialog.
  */
-function toggleAlertLogs() {
-  if (getLogAlerts()) {
-    PropertiesService.getUserProperties().deleteProperty(LOG_ALERTS_PROPERTY_NAME);
+function toggleWriteToLogFile() {
+  if (getWriteToLogFileEnabled()) {
+    PropertiesService.getDocumentProperties().deleteProperty(WRITE_TO_LOG_FILE_PROPERTY_NAME);
   } else {
-    PropertiesService.getUserProperties().setProperty(LOG_ALERTS_PROPERTY_NAME, 'true');
+    PropertiesService.getDocumentProperties().setProperty(WRITE_TO_LOG_FILE_PROPERTY_NAME, 'true');
   }
 }
 
@@ -86,6 +86,22 @@ function toggleAlertLogs() {
  *
  * @returns {boolean}
  */
-function getLogAlerts() {
-  return PropertiesService.getUserProperties().getProperty(LOG_ALERTS_PROPERTY_NAME) === 'true';
+function getWriteToLogFileEnabled() {
+  return PropertiesService.getDocumentProperties().getProperty(WRITE_TO_LOG_FILE_PROPERTY_NAME) === 'true';
+}
+
+function _getLogSheet() {
+  if (!_logSheet) {
+    _logSheet = SpreadsheetApp.openById(LOG_SPREADSHEET_ID).getSheetById(LOG_SHEET_ID);
+  }
+
+  return _logSheet;
+}
+
+function _writeToLogSheet(fileName, functionName, message, level) {
+  const logSheet = _getLogSheet();
+  const row = logSheet.getLastRow() + 1;
+
+  // HARD-CODED COLUMNS: 1=TIMESTAMP, 2=LEVEL, 3=FILE, 4=FUNCTION, 5=MESSAGE
+  logSheet.getRange(row, 1, 1, 5).setValues([[new Date().toISOString(), level, fileName, functionName, message]]);
 }

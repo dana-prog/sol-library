@@ -13,9 +13,8 @@ let content = files
   // remove "declare function"
   .replace(/declare function/g, '')
   // convert variables/constants
-  .replace(/declare (const|let|var) (\w+): ([^;]+);/g,
-    (_, kind, name, type) => `  ${name}: ${type};`
-  )
+  .replace(/declare (const|let|var) .*?;/g, '')
+  .replace(/declare namespace \w+ {[\s\S]*?}\n?/g, '')
   // remove extra "declare"
   .replace(/declare /g, '')
   // add newlines after semicolons

@@ -62,29 +62,26 @@ declare const SOLLibrary: {
  */
  buildLogMessage(fileName: string, functionName: string, message: string): string;
 
-
 /**
  * Toggles the user setting for showing alert logs.
  * When true, logs are displayed in an alert dialog.
  */
- toggleAlertLogs(): void;
+ toggleWriteToLogFile(): void;
 
 /**
  * Returns true if alert logs are enabled.
  *
  * @returns {boolean}
  */
- getLogAlerts(): boolean;
+ getWriteToLogFileEnabled(): boolean;
 
-  LOG_ALERTS_PROPERTY_NAME: "logAlerts";
+ _getLogSheet(): any;
 
-  LOG_LEVEL: "LOG";
+ _writeToLogSheet(fileName: any, functionName: any, message: any, level: any): void;
 
-  INFO_LEVEL: "INFO";
 
-  WARN_LEVEL: "WARN";
 
-  ERROR_LEVEL: "ERROR";
+
 
 /**
  * Returns a sheet by name, optionally creating it if it does not exist.
@@ -124,12 +121,12 @@ declare const SOLLibrary: {
 /**
  * Returns all values from a column.
  *
- * @param {string|GoogleAppsScript.Spreadsheet.Sheet|GoogleAppsScript.Spreadsheet.Range} sheetOrRange Either sheet or sheet name or a range.
+ * @param {string} sheetName Sheet name.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {Array<*>} Column values.
  */
- getColumnValues(sheetOrRange: string | GoogleAppsScript.Spreadsheet.Sheet | GoogleAppsScript.Spreadsheet.Range, colHeader: string | number, includeHeader?: boolean): Array<any>;
+ getColumnValues(sheetName: string, colHeader: string | number, includeHeader?: boolean): Array<any>;
 
 /**
  * Returns an object mapping headers to values for a row.
@@ -207,12 +204,21 @@ declare const SOLLibrary: {
 /**
  * Returns the range of a column by header or index.
  *
- * @param {GoogleAppsScript.Spreadsheet.Sheet|string} sheetNameOrObj Either sheet or sheet name.
+ * @param {string} sheetName Sheet name.
  * @param {string|number} colHeader Column header name or index.
  * @param {boolean} [includeHeader=true] Whether to include header row.
  * @returns {GoogleAppsScript.Spreadsheet.Range} Column range.
  */
- getColumnRange(sheetNameOrObj: GoogleAppsScript.Spreadsheet.Sheet | string, colHeader: string | number, includeHeader?: boolean): GoogleAppsScript.Spreadsheet.Range;
+ getColumnRange(sheetName: string, colHeader: string | number, includeHeader?: boolean): GoogleAppsScript.Spreadsheet.Range;
+
+/**
+ * Checks whether one range is fully contained in another range.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Range} innerRange The range to test (candidate inside).
+ * @param {GoogleAppsScript.Spreadsheet.Range} outerRange The containing range.
+ * @returns {boolean} TRUE if `innerRange` is completely inside `outerRange`, otherwise FALSE.
+ */
+ isInside(innerRange: GoogleAppsScript.Spreadsheet.Range, outerRange: GoogleAppsScript.Spreadsheet.Range): boolean;
 
 /**
  * Returns a pretty-printed JSON string.
@@ -238,6 +244,8 @@ declare const SOLLibrary: {
  * @param {string} message Alert message.
  */
  alert(title: string, message: string): void;
+
+ toast(message: any, title: any, timeout: any): void;
 
 /**
  * Converts an array to an object using a property-to-index map.
@@ -267,6 +275,10 @@ declare const SOLLibrary: {
  * @returns {string} Capitalized string.
  */
  capitalize(str: string, allWords?: boolean): string;
+
+ debugDuration(operationName: any, callback: any, ...args: any[]): any;
+
+ getFnWithDebugDuration(operationName: any, callback: any): (...args: any[]) => any;
 
 
 };

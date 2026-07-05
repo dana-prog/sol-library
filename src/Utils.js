@@ -44,6 +44,10 @@ function alert(title, message) {
   }
 }
 
+function toast(message, title, timeout) {
+  SpreadsheetApp.getActiveSpreadsheet().toast(message, title, timeout);
+}
+
 /**
  * Converts an array to an object using a property-to-index map.
  *
@@ -96,4 +100,17 @@ function capitalize(str, allWords = true) {
     .split(/\s+/)
     .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '')
     .join(' ');
+}
+
+function debugDuration(operationName, callback) {
+  log('Utils', '_debug', `start '${operationName}'`);
+  const start = Date.now();
+  const result = callback();
+  const elapsedMs = Date.now() - start;
+  log('Utils', '_debug', `'${operationName}' took ${elapsedMs}ms`);
+  return result;
+}
+
+function getFnWithDebugDuration(operationName, callback) {
+  return (...args) => debugDuration(operationName, callback, ...args);
 }
