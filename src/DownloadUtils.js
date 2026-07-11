@@ -33,40 +33,32 @@ function exportValuesXSLX(deleteTmpResourcesCallbackFnName) {
     range.copyTo(range, {contentsOnly: true});
   });
 
-  // url for download
-  const url = "https://docs.google.com/spreadsheets/d/" + copy.getId() + "/export?format=xlsx";
+  downloadFile(copy, deleteTmpResourcesCallbackFnName);
+}
 
-  logArgs('Utils', 'exportValuesXSLX', {
-    spreadsheetId: spreadsheet.getId(),
-    copyId: copy.getId(),
-    url
-  });
+function exportFormulasAsJson(deleteTmpResourcesCallbackFnName) {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const range = sheet.getDataRange();
+  const formulas = range.getFormulas();
+  const values = range.getValues();
 
-  // html trigger browser download
-  const html = HtmlService
-    .createHtmlOutput(`
-    <script>
-      window.open("${url}", "_blank");
-      google.script.host.close();
-    </script>
-  `)
-    .setWidth(10)
-    .setHeight(10);
+  const json = [];
+  for (let row = 0; row < formulas.length; row++) {
+    for (let col = 0; col < formulas[row].length; col++) {
+      if (formulas[row][col]) {
+        json.push({
+          cell: String.fromCharCode(65 + col) + (row + 1),
+          formula: formulas[row][col],
+          value: values[row][col]
+        });
+      }
+    }
+  }
 
-  SpreadsheetApp
-    .getUi()
-    .showModalDialog(html, "Downloading...");
-
-  const trigger =
-    ScriptApp
-      .newTrigger(deleteTmpResourcesCallbackFnName)
-      .timeBased()
-      .after(60 * 1000)
-      .create();
-
-  PropertiesService
-    .getScriptProperties()
-    .setProperty(`trigger_${trigger.getUniqueId()}`, copy.getId());
+  const jsonString = JSON.stringify(json, null, 2);
+  const blob = Blob.createTextBlob(jsonString, 'application/json');
+  const file = DriveApp.createFile(blob).setName('formulas.json');
+  downloadFile(file, deleteTmpResourcesCallbackFnName);
 }
 
 /**
@@ -103,4 +95,35 @@ function deleteTmpExportResources(event) {
       ScriptApp.deleteTrigger(trigger);
     }
   });
+}
+
+function downloadFile(file, deleteTmpResourcesCallbackFnName) {
+  // url for download
+  const url = "https://docs.google.com/spreadsheets/d/" + file.getId() + "/export?format=xlsx";
+
+  // html trigger browser download
+  const html = HtmlService
+    .createHtmlOutput(`
+    <script>
+      window.open("${url}", "_blank");
+      google.script.host.close();
+    </script>
+  `)
+    .setWidth(10)
+    .setHeight(10);
+
+  SpreadsheetApp
+    .getUi()
+    .showModalDialog(html, "Downloading...");
+
+  const trigger =
+    ScriptApp
+      .newTrigger(deleteTmpResourcesCallbackFnName)
+      .timeBased()
+      .after(60 * 1000)
+      .create();
+
+  PropertiesService
+    .getScriptProperties()
+    .setProperty(`trigger_${trigger.getUniqueId()}`, copy.getId());
 }

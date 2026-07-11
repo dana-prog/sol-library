@@ -93,12 +93,12 @@ function capitalize(str, allWords = true) {
   if (!str) return '';
 
   if (!allWords) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 
   return str
     .split(/\s+/)
-    .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '')
+    .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '')
     .join(' ');
 }
 

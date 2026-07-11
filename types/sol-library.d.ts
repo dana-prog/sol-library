@@ -20,6 +20,8 @@ declare const SOLLibrary: {
  */
  exportValuesXSLX(deleteTmpResourcesCallbackFnName: any): void;
 
+ exportFormulasAsJson(deleteTmpResourcesCallbackFnName: any): void;
+
 /**
  * Deletes temporary export resources created by exportValuesXSLX:
  * - Trashes the copied file
@@ -30,6 +32,8 @@ declare const SOLLibrary: {
  * @returns {void}
  */
  deleteTmpExportResources(event: GoogleAppsScript.Events.TimeDriven): void;
+
+ downloadFile(file: any, deleteTmpResourcesCallbackFnName: any): void;
 
 /**
  * Logs a message with file and function context.
@@ -276,7 +280,7 @@ declare const SOLLibrary: {
  */
  capitalize(str: string, allWords?: boolean): string;
 
- debugDuration(operationName: any, callback: any, ...args: any[]): any;
+ debugDuration(operationName: any, callback: any): any;
 
  getFnWithDebugDuration(operationName: any, callback: any): (...args: any[]) => any;
 
