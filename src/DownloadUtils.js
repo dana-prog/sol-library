@@ -36,29 +36,106 @@ function exportValuesXSLX(deleteTmpResourcesCallbackFnName) {
   downloadFile(copy, deleteTmpResourcesCallbackFnName);
 }
 
-function exportFormulasAsJson(deleteTmpResourcesCallbackFnName) {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getDataRange();
-  const formulas = range.getFormulas();
-  const values = range.getValues();
+/**
+ * Creates a JSON file containing all cell formulas in the active spreadsheet.
+ * @param deleteTmpResourcesCallbackFnName
+ */
+function exportFormulasJSON(deleteTmpResourcesCallbackFnName) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-  const json = [];
-  for (let row = 0; row < formulas.length; row++) {
-    for (let col = 0; col < formulas[row].length; col++) {
-      if (formulas[row][col]) {
-        json.push({
-          cell: String.fromCharCode(65 + col) + (row + 1),
-          formula: formulas[row][col],
-          value: values[row][col]
-        });
+  // Extract formulas from all non-private sheets
+  const allFormulas = {};
+  spreadsheet.getSheets().forEach(sheet => {
+    if (!sheet.getName().startsWith('_')) {
+      const range = sheet.getDataRange();
+      const formulas = range.getFormulas();
+      const values = range.getValues();
+
+      const sheetFormulas = [];
+      for (let row = 0; row < formulas.length; row++) {
+        for (let col = 0; col < formulas[row].length; col++) {
+          if (formulas[row][col]) {
+            sheetFormulas.push({
+              cell: String.fromCharCode(65 + col) + (row + 1),
+              formula: formulas[row][col],
+              value: values[row][col]
+            });
+          }
+        }
       }
+      allFormulas[sheet.getName()] = sheetFormulas;
     }
+  });
+
+  // Create temp JSON file
+  const jsonBlob = Utilities.newBlob(JSON.stringify(allFormulas, null, 2), 'application/json', `formulas_${timestamp}.json`);
+  const file = DriveApp.createFile(jsonBlob);
+
+  downloadFile(file, deleteTmpResourcesCallbackFnName);
+}
+
+/**
+ * Creates a JSON file containing all named functions in the calling project.
+ * @param deleteTmpResourcesCallbackFnName
+ */
+function exportNamedFunctionsJSON(deleteTmpResourcesCallbackFnName) {
+  const spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+  const functions = _dumpNamedFunctions(spreadsheetId);
+
+  if (functions.error) {
+    Logger.log('Error: ' + functions.error);
+    return;
   }
 
-  const jsonString = JSON.stringify(json, null, 2);
-  const blob = Blob.createTextBlob(jsonString, 'application/json');
-  const file = DriveApp.createFile(blob).setName('formulas.json');
+  const jsonBlob = Utilities.newBlob(
+    JSON.stringify(functions, null, 2),
+    'application/json',
+    `named_functions_${timestamp}.json`
+  );
+  const file = DriveApp.createFile(jsonBlob);
+
   downloadFile(file, deleteTmpResourcesCallbackFnName);
+}
+
+/**
+ * Named Functions are not exposed by SpreadsheetApp or the Sheets REST API.
+ * The xlsx export endpoint preserves them as <definedName> elements inside
+ * xl/workbook.xml (LAMBDA-serialized). We fetch that export and parse it.
+ * Source: https://gist.github.com/tanaikech/9a9e571ed662e35eec0aa747bb4e025a
+ */
+function _dumpNamedFunctions(spreadsheetId) {
+  try {
+    const url = `https://docs.google.com/spreadsheets/export?exportFormat=xlsx&id=${spreadsheetId}`;
+    const response = UrlFetchApp.fetch(url, {
+      headers: { authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true,
+    });
+    if (response.getResponseCode() !== 200) {
+      return { error: `export http ${response.getResponseCode()}` };
+    }
+
+    const blobs = Utilities.unzip(response.getBlob().setContentType(MimeType.ZIP));
+    const workbookBlob = blobs.find((blob) => blob.getName() === 'xl/workbook.xml');
+    if (!workbookBlob) {
+      return { error: 'xl/workbook.xml not found in export' };
+    }
+
+    const root = XmlService.parse(workbookBlob.getDataAsString()).getRootElement();
+    const definedNamesElement = root.getChild('definedNames', root.getNamespace());
+    if (!definedNamesElement) {
+      return [];
+    }
+
+    return definedNamesElement.getChildren().map((element) => ({
+      name: element.getAttribute('name').getValue(),
+      definition: element.getValue(),
+    }));
+  } catch (error) {
+    return { error: String(error) };
+  }
 }
 
 /**
@@ -125,5 +202,5 @@ function downloadFile(file, deleteTmpResourcesCallbackFnName) {
 
   PropertiesService
     .getScriptProperties()
-    .setProperty(`trigger_${trigger.getUniqueId()}`, copy.getId());
+    .setProperty(`trigger_${trigger.getUniqueId()}`, file.getId());
 }

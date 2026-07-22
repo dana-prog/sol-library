@@ -20,7 +20,17 @@ declare const SOLLibrary: {
  */
  exportValuesXSLX(deleteTmpResourcesCallbackFnName: any): void;
 
- exportFormulasAsJson(deleteTmpResourcesCallbackFnName: any): void;
+/**
+ * Creates a JSON file containing all cell formulas in the active spreadsheet.
+ * @param deleteTmpResourcesCallbackFnName
+ */
+ exportFormulasJSON(deleteTmpResourcesCallbackFnName: any): void;
+
+/**
+ * Creates a JSON file containing all named functions in the calling project.
+ * @param deleteTmpResourcesCallbackFnName
+ */
+ exportNamedFunctionsJSON(deleteTmpResourcesCallbackFnName: any): void;
 
 /**
  * Deletes temporary export resources created by exportValuesXSLX:
