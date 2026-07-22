@@ -114,7 +114,3 @@ function debugDuration(operationName, callback) {
 function getFnWithDebugDuration(operationName, callback) {
   return (...args) => debugDuration(operationName, callback, ...args);
 }
-
-function GUID() {
-  return Utilities.getUuid();
-}
