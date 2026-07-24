@@ -29,6 +29,21 @@ function getColNumByHeader(rangeOrSheet, colHeader) {
 }
 
 /**
+ * Returns the column header for a given column number.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|GoogleAppsScript.Spreadsheet.Range} rangeOrSheet
+ * @param {number} colNum 1-based column number.
+ * @returns {string}
+ */
+function getColHeaderByNum(rangeOrSheet, colNum) {
+  const range = rangeOrSheet.getDataRange
+    ? rangeOrSheet.getRange(1, 1, 1, rangeOrSheet.getLastColumn())
+    : rangeOrSheet;
+
+  return range.getValues()[0][colNum - 1];
+}
+
+/**
  * Appends multiple rows to the sheet.
  *
  * @param {string} sheetName Sheet name.
@@ -261,4 +276,40 @@ function isInside(innerRange, outerRange) {
     innerRange.getLastRow() <= outerRange.getLastRow() &&
     innerRange.getColumn() >= outerRange.getColumn() &&
     innerRange.getLastColumn() <= outerRange.getLastColumn();
+}
+
+/**
+ * Returns the first error found in each sheet.
+ *
+ * Columns:
+ *   Sheet | Cell | Error
+ *
+ * @return {Array<Array<string>>}
+ * @customfunction
+ */
+function REPORT_ERRORS() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const result = [["Sheet", "Cell", "Error"]];
+
+  ss.getSheets().forEach(sheet => {
+    const values = sheet.getDataRange().getDisplayValues();
+
+    outer:
+      for (let r = 0; r < values.length; r++) {
+        for (let c = 0; c < values[r].length; c++) {
+          const value = values[r][c];
+
+          if (typeof value === "string" && value.startsWith("#")) {
+            result.push([
+              sheet.getName(),
+              sheet.getRange(r + 1, c + 1).getA1Notation(),
+              value
+            ]);
+            break outer;
+          }
+        }
+      }
+  });
+
+  return result;
 }

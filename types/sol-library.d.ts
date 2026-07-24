@@ -33,6 +33,22 @@ declare const SOLLibrary: {
  exportNamedFunctionsJSON(deleteTmpResourcesCallbackFnName: any): void;
 
 /**
+ * Named Functions are not exposed by SpreadsheetApp or the Sheets REST API.
+ * The xlsx export endpoint preserves them as <definedName> elements inside
+ * xl/workbook.xml (LAMBDA-serialized). We fetch that export and parse it.
+ * Source: https://gist.github.com/tanaikech/9a9e571ed662e35eec0aa747bb4e025a
+ */
+ _dumpNamedFunctions(spreadsheetId: any): {
+    name: string;
+
+    definition: string;
+
+}[] | {
+    error: string;
+
+};
+
+/**
  * Deletes temporary export resources created by exportValuesXSLX:
  * - Trashes the copied file
  * - Removes the associated script property
@@ -114,6 +130,15 @@ declare const SOLLibrary: {
  * @returns {number} Column number (1-based).
  */
  getColNumByHeader(rangeOrSheet: GoogleAppsScript.Spreadsheet.Sheet | GoogleAppsScript.Spreadsheet.Range, colHeader: string): number;
+
+/**
+ * Returns the column header for a given column number.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|GoogleAppsScript.Spreadsheet.Range} rangeOrSheet
+ * @param {number} colNum 1-based column number.
+ * @returns {string}
+ */
+ getColHeaderByNum(rangeOrSheet: GoogleAppsScript.Spreadsheet.Sheet | GoogleAppsScript.Spreadsheet.Range, colNum: number): string;
 
 /**
  * Appends multiple rows to the sheet.
@@ -233,6 +258,14 @@ declare const SOLLibrary: {
  * @returns {boolean} TRUE if `innerRange` is completely inside `outerRange`, otherwise FALSE.
  */
  isInside(innerRange: GoogleAppsScript.Spreadsheet.Range, outerRange: GoogleAppsScript.Spreadsheet.Range): boolean;
+
+/**
+ * Returns a table of all spreadsheet errors.
+ *
+ * @return {Array<Array<string|number>>}
+ * @customfunction
+ */
+ REPORT_ERRORS(): Array<Array<string | number>>;
 
 /**
  * Returns a pretty-printed JSON string.
